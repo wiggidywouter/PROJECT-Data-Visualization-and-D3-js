@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+
+<html lang='en'>
+
+<head>
+
+  <meta charset='utf-8'>
+
+  <title>dc.js Webtraffic Dashboard</title>
+
+  <script src="../../node_modules/d3/d3.js"></script>
+
+  <script src="../../node_modules/crossfilter/crossfilter.js" type="text/javascript"></script>
+
+  <script src="../../node_modules/dc/dc.js" type="text/javascript"></script>
+
+  <script src="../../node_modules/jquery/dist/jquery.js" type="text/javascript"></script>
+
+  <script src="../../node_modules/moment/moment.js" type="text/javascript"></script>
+
+  <script src="../../node_modules/bootstrap/dist/js/bootstrap.js" type="text/javascript"></script>
+
+  <script src="../../node_modules/bootstrap-daterangepicker/daterangepicker.js" type="text/javascript"></script>
+
+
+  <link href="../../node_modules/bootstrap/dist/css/bootstrap.css" rel="stylesheet" type="text/css">
+
+  <link href="../../node_modules/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet" type="text/css">
+
+  <link href="../../node_modules/dc/dc.css" rel="stylesheet" type="text/css">
+
+
+  <style type="text/css">
+    
+    input {
+      margin-bottom: 10px; 
+    }
+
+    button#daterange {
+      margin: 0;
+    }
+
+    h4 span {
+      font-size:14px;
+      font-weight:normal;
+    }
+
+    h3 {
+      float: right;
+      margin: 25px 0 25px;
+    }
+
+    h3 span {
+      font-size:14px;
+      font-weight:normal;
+    } 
+
+  </style>
+
+</head>
+
+<body>
+
+<div class='container' style='font: 12px sans-serif;'>
+
+  <div class="row">
+
+    <div class="dc-data-count pull-left">
+
+      <h3>Webtraffic Rapport 2015
+
+        <span>
+          <span class="filter-count"></span>
+           selected out of 
+          <span class="total-count"></span>
+           records | 
+          <a href="javascript:dc.filterAll(); dc.renderAll();">Reset All</a>
+        </span>
+
+      </h3>
+
+    </div>
+
+    <button type="button" id="daterange" class="btn btn-default btn-sm pull-right">
+
+      <i class="glyphicon glyphicon-calendar"></i> <span>January 01, 2015 - December 31, 2015</span>
+    
+    </button>
+
+  </div> <!-- /row -->
+
+  <div class='row'>
+
+    <div class='span6' id='dc-sessions-chart'>
+
+      <h4>Filter by month</h4>
+
+    </div>
+
+    <div class='span6' id='dc-sessions-weekday-chart'>
+
+      <h4>Filter by weekday</h4>
+
+    </div>
+
+  </div> <!-- /row -->
+
+  <div class='row'>
+
+    <div class='span12' id='dc-time-chart'>
+
+      <h4>Sessions per <a href="#" id="toggle-time-interval">day</a></h4>
+
+    </div>
+
+  </div> <!-- /row -->
+
+  <div class='row'>
+
+    <div class='span12'>
+
+      <h4>Web traffic per day</h4>
+
+      <table class='table table-hover' id='dc-table-graph'>
+
+        <thead>
+          <tr class='header'>
+            <th>Date</th>
+            <th>Sessions</th>
+            <th>People</th>
+          </tr>
+        </thead>
+
+      </table>
+
+    </div>
+
+  </div> <!-- /row -->
+
+</div> <!-- /container -->
+  
+<script>
+
+; (function ($, window, document, undefined) {
+
+  // Variables
+
+  var data, 
+
+      facts,
+
+      all,
+
+      timeDimension, 
+
+      dayDimension, 
+
+      weekDimension, 
+
+      monthDimension,
+
+      sessionsPerDay, 
+
+      sessionsPerWeek, 
+
+      sessionsPerMonth;
+
+  // Chart objects
+
+  window.dataTable = dc.dataTable("#dc-table-graph");
+
+  window.sessionsChart = dc.barChart("#dc-sessions-chart");
+
+  window.sessionsWeekDayChart = dc.rowChart("#dc-sessions-weekday-chart");
+
+  window.timeChart = dc.lineChart("#dc-time-chart");
+
+  // Helper functions
+
+  function applyDateRange (startDate, endDate) {
+
+    timeDimension.filter( function(d){
+
+      return d >= startDate && d <= endDate
+    
+    });
+
+    dc.redrawAll();
+  }
+
+  function toggleTimeInterval (e) {
+
+    var options = ["day","week","month"],
+
+        groupings = [sessionsPerDay, sessionsPerWeek, sessionsPerMonth],
+
+        element = e.target,
+
+        currentIndex = options.indexOf(element.text)
+
+        nextIndex = (currentIndex < 2) ? currentIndex + 1 : 0;
+    
+    element.text = options[nextIndex];
+
+    timeChart.group( remove_empty_bins( groupings[nextIndex] ) );
+
+    timeChart.redraw();
+  }
+
+  function remove_empty_bins(source_group) {
+      return {
+
+          all:function () {
+
+              return source_group.all().filter(function(d) {
+                  return d.value != 0;
+              });
+          }
+      };
+  }
+
+  // Events
+
+  $("#toggle-time-interval").on("click", function (e) {
+
+     toggleTimeInterval(e);
+
+  });
+
+  $("button#daterange").daterangepicker(
+    {
+
+      locale: {
+        format: 'DD-MM-YYYY'
+      },
+
+      startDate: '01-01-2015',
+
+      endDate: '31-12-2015',
+
+      minDate: '01-01-2015',
+
+      maxDate: '31-12-2015'
+    
+    }, 
+
+    function(start, end, label) {
+
+      var startDate = start.toDate(),
+
+          endDate = end.toDate(),
+
+          dateFormat = d3.time.format("%B %d, %Y");
+
+      $("button#daterange span").text( dateFormat(startDate) + " - " + dateFormat(endDate) );
+
+      applyDateRange(startDate, endDate);
+    }
+  );
+
+  // load csv
+
+  d3.csv("webtraffic.csv", function (_data) {
+
+    data = _data;
+
+    var dateFormat = d3.time.format("%Y%m%d");
+
+    data.forEach(function(d) { 
+
+      d.date = dateFormat.parse(d.Datum); 
+      
+      d.day = +d['Dag van de week'];
+      
+      d.month = +d['Maand van het jaar'];
+      
+      d.year = +d.Jaar;
+      
+      d.sessions = +d.Sessies;
+      
+      d.users = +d.Gebruikers;
+
+    });
+
+    // Crossfilter dimensions
+
+    facts = crossfilter(data);
+
+    timeDimension = facts.dimension(function (d) {
+      return d.date;
+    });
+
+    dayDimension = facts.dimension(function (d) {
+      return d3.time.day(d.date);
+    });
+
+    weekDimension = facts.dimension(function (d) {
+      return d3.time.week(d.date);
+    });
+
+    monthDimension = facts.dimension(function (d) {
+      return d3.time.month(d.date);
+    });
+
+    dayOfWeekDimension = facts.dimension(function (d) {
+      return d.date.getDay() + '.' + d3.time.format("%a")(d.date);
+    });
+
+    // Crossfilter groups
+
+    all = facts.groupAll();
+
+    sessionsPerDay = dayDimension.group()
+      .reduceSum(function(d) {
+        if (+d.sessions) return d.sessions;
+      });
+
+    sessionsPerWeek = weekDimension.group()
+      .reduceSum(function(d) {
+        if (+d.sessions) return d.sessions;
+      });
+
+    sessionsPerMonth = monthDimension.group()
+      .reduceSum(function(d) {
+        if (+d.sessions) return d.sessions;
+      });
+
+    sessionsPerWeekDay = dayOfWeekDimension.group()
+      .reduce(
+          function (p, v) {
+              ++p.count;
+              p.total += v.sessions;
+              p.avg = Math.round(p.total / p.count);
+              return p;
+          },
+          function (p, v) {
+              --p.count;
+              p.total -= v.sessions;
+              p.avg = p.count ? Math.round(p.total / p.count) : 0;
+              return p;
+          },
+          function () {
+              return {count: 0, total: 0, avg: 0};
+          }
+      );
+
+    // Set up charts
+
+    sessionsChart.width(480)
+
+      .height(225)
+      
+      .margins({top: 10, right: 10, bottom: 20, left: 40})
+      
+      .dimension(monthDimension)
+      
+      .group(remove_empty_bins(sessionsPerMonth))
+      
+      .transitionDuration(500)
+      
+      .gap(2)
+      
+      .x( d3.scale.ordinal().domain( d3.time.months ))
+      
+      .elasticY(true)
+      
+      .elasticX(true)
+      
+      .xUnits(dc.units.ordinal)
+      
+      .xAxis().tickFormat(d3.time.format('%b'));  
+
+    sessionsWeekDayChart.width(480)
+      
+      .height(225)
+      
+      .margins({top: 10, right: 10, bottom: 20, left: 40})
+      
+      .dimension(dayOfWeekDimension)
+      
+      .group(remove_empty_bins(sessionsPerWeekDay))
+      
+      .transitionDuration(500)
+      
+      .ordinalColors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb'])
+      
+      .elasticX(true)
+      
+      .valueAccessor(function (p) {
+          return p.value.avg;
+      })
+      
+      .label(function(d) {
+         return d.key.split('.')[1]; 
+      });  
+
+    timeChart.width(1140)
+      
+      .height(150)
+      
+      .margins({top: 20, right: 10, bottom: 20, left: 40})
+      
+      .dimension(dayDimension)
+      
+      .group(remove_empty_bins(sessionsPerDay))
+      
+      .transitionDuration(500)
+      
+      .elasticY(true)
+      
+      .elasticX(true)
+      
+      .brushOn(false)
+      
+      .x( d3.time.scale().domain( d3.extent(dayDimension.top(Infinity), function(d) { return d.date; }) ))
+      
+      .xAxis();
+
+    dataTable.width(960).height(800)
+      
+      .dimension(dayDimension)
+      .group(function(d) { return "Web traffic per day"
+      })
+      
+      .size(1000)
+      
+      .columns([
+      
+        function(d) { return d3.time.format("%B %d, %Y")(d.date); },
+      
+        function(d) { return d.sessions; },
+      
+        function(d) { return d.users; }
+      
+      ])
+      
+      .sortBy(function(d){ return d.date; })
+      
+      .order(d3.ascending);
+
+    dc.dataCount(".dc-data-count").dimension(facts).group(all);
+
+    // Init
+
+    dc.renderAll();
+    
+  });
+
+})(jQuery, window, document);
+  
+</script>
+    
+</body>
+</html>

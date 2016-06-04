@@ -1,0 +1,66 @@
+
+/* Text styling */
+
+.funnel-chart text {
+  fill: black;
+  font: 10px sans-serif;
+}
+
+.funnel-chart .step-name,
+.funnel-chart .metric-value,
+.funnel-chart .drop-percent {
+  font: 13px sans-serif;
+  font-weight: 600;
+}
+
+.funnel-chart .drop-percent {
+  font-size: 20px;
+}
+
+.funnel-chart .drop-percent,
+.funnel-chart .drop-count {
+  text-anchor: middle;
+}
+
+/* Row,column borders */
+
+.funnel-chart rect {
+  fill: none;
+  stroke: #eee;
+  stroke-width: 1;
+}
+
+/* Icon circles */
+
+.funnel-chart circle {
+  fill: red;
+  stroke: white;
+  stroke-width: 3.5;
+}
+
+.funnel-chart .end-circle {
+  fill: green;
+}
+
+.funnel-chart .circle-icon {
+  fill: white;
+  font: 20px icomoon;
+  text-anchor: middle;
+}
+
+/* Media queries */
+
+@media all and (max-width : 1000px) {
+  .funnel-chart circle {
+    stroke-width: 2;
+    -webkit-transform: translateY(-10px);
+            transform: translateY(-10px);
+  }
+  .funnel-chart .circle-icon {
+    -webkit-transform: translateY(-10px);
+            transform: translateY(-10px);
+  }
+  .funnel-chart .drop-percent {
+    font-size: 16px;
+  }
+}

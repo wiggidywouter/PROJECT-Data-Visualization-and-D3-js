@@ -1,0 +1,690 @@
+
+<!DOCTYPE html>
+
+<html lang="nl">
+
+  <head>
+
+    <title>Traffic per provincie</title>
+
+    <meta charset="UTF-8">
+
+    <link href="../../node_modules/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+
+    <link href="../../node_modules/dc/dc.css" rel="stylesheet">
+
+    <style type="text/css">
+
+      body {
+        font-size: 18px;
+      }
+      
+      h3 {
+        font-size: 10px;
+        text-transform: uppercase;
+        margin: 20px 0px;
+      }
+
+      .container {
+        opacity: 0;
+      }
+
+      .dc-chart .deselected circle {
+        stroke: none;
+        fill: rgba(200,0,0,0.2);
+      }
+
+      .info {
+        position: absolute;
+        margin: 5px 0px;
+        line-height: 1.8;
+      }
+
+      .filter {
+        font-size: 18px;
+        font-weight: bold;
+        text-transform: uppercase;
+        line-height: 2;
+        letter-spacing: 3px;
+      }
+
+      .reset {
+        font-size: 13px;
+      }
+
+      /* Spinner */
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        position: fixed;
+        top: calc(50% - 20px);
+        left: calc(50% - 20px);
+      }
+
+      .double-bounce1, .double-bounce2 {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background-color: #B1D4E7;
+        opacity: 0.6;
+        position: absolute;
+        top: 0;
+        left: 0;
+        
+        -webkit-animation: sk-bounce 2.0s infinite ease-in-out;
+        animation: sk-bounce 2.0s infinite ease-in-out;
+      }
+
+      .double-bounce2 {
+        -webkit-animation-delay: -1.0s;
+        animation-delay: -1.0s;
+      }
+
+      @-webkit-keyframes sk-bounce {
+        0%, 100% { -webkit-transform: scale(0.0) }
+        50% { -webkit-transform: scale(1.0) }
+      }
+
+      @keyframes sk-bounce {
+        0%, 100% { 
+          transform: scale(0.0);
+          -webkit-transform: scale(0.0);
+        } 50% { 
+          transform: scale(1.0);
+          -webkit-transform: scale(1.0);
+        }
+      }
+
+    </style>
+
+    <script type="text/javascript" src="../../node_modules/d3/d3.js"></script>
+
+    <script type="text/javascript" src="../../node_modules/crossfilter/crossfilter.js"></script>
+
+    <script type="text/javascript" src="../../node_modules/dc/dc.js"></script>
+
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="row">
+
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          
+          <h3>Bezoeken en bestellingen per provincie</h3>
+
+          <hr/>
+        
+        </div>
+
+      </div> <!-- /row -->
+
+      <div class="row">
+        
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          
+          <div id="choropleth-chart">
+        
+            <div id="bubble-overlay-chart"></div>
+        
+            <div id="bubble-overlay-chart2"></div>
+        
+            <div class="info">
+        
+              <span class='filter'>Alle provincies</span>
+        
+              <a class='reset' href='javascript:choroplethChart.filterAll();dc.redrawAll();' style='visibility: hidden;'> reset</a>
+        
+              <div>Bezoeken: <span id="sessions-number-display" class=""></span></div>
+        
+              <div>Bestellingen: <span id="orders-number-display" class=""></span></div>
+        
+              <div>Conversie: <span id="conversion-number-display" class=""></span></div>
+        
+            </div>
+        
+          </div> <!-- /choropleth-chart -->
+
+        </div>
+
+      </div> <!-- /row -->
+
+    </div>
+
+    <div class="spinner">
+
+      <div class="double-bounce1"></div>
+      
+      <div class="double-bounce2"></div>
+
+    </div>
+
+    <script type="text/javascript">
+
+; (function(window, document, undefined){
+
+  // Vars, chart objects
+
+  var data, regios, bestellingenPerRegio, sessiesPerRegio, conversieratioPerRegio, conversieratio
+
+      chart_width = 1170,
+
+      chart_height = 940,
+
+      d3_projection = d3.geo.mercator().scale(11000).translate([-470, 12250]),
+
+      bubbleOverlayChart = dc.bubbleOverlay("#bubble-overlay-chart"),
+
+      bubbleOverlayChart2 = dc.bubbleOverlay("#bubble-overlay-chart2"),
+
+      conversionNumberDisplay = dc.numberDisplay("#conversion-number-display"),
+
+      sessionsNumberDisplay = dc.numberDisplay("#sessions-number-display"),
+
+      ordersNumberDisplay = dc.numberDisplay("#orders-number-display");
+
+
+  window.choroplethChart = dc.geoChoroplethChart("#choropleth-chart");
+
+
+  // Helper __function
+
+  var __generatePointsFromGroup = (function () {
+
+      var _chart, _group, _projection, _filterAccessor, _nameAccessor, _longitudeAccessor, _latitudeAccessor,
+          _all, _name, _longitude, _latitude, _xyCoords;
+      
+      var chart = function (chart){
+
+        _chart = chart;
+        
+        return this;
+      };
+
+      var group = function (group){
+
+        _group = group;
+        
+        _all = _group.all();
+        
+        return this;
+      };
+
+      var projection = function (projection){
+        
+        _projection = projection;
+        
+        return this;
+      };
+
+      var filterAccessor = function (filterAccessor){
+        
+        _filterAccessor = filterAccessor;
+        
+        return this;
+      };
+
+      var nameAccessor = function (nameAccessor){
+        
+        _nameAccessor = nameAccessor;
+        
+        return this;
+      };
+
+      var longitudeAccessor = function (longitudeAccessor){
+        
+        _longitudeAccessor = longitudeAccessor;
+        
+        return this;
+      };
+
+      var latitudeAccessor = function (latitudeAccessor){
+        
+        _latitudeAccessor = latitudeAccessor;
+        
+        return this;
+      };
+
+      var generate = function (latitudeAccessor){
+        
+        for (var i = 0; i < _all.length; i++) {
+
+          if ( _filterAccessor(_all[i]) ){ 
+
+            _name = _nameAccessor(_all[i]);
+        
+            _longitude = parseFloat( _longitudeAccessor(_all[i]) );
+        
+            _latitude = parseFloat( _latitudeAccessor(_all[i]) );
+
+            if (_name && _longitude && _latitude){
+
+              _xyCoords = _projection([_longitude, _latitude]);
+        
+              _chart.point(_name, _xyCoords[0], _xyCoords[1]);
+              
+            }
+          
+          }
+
+        };
+
+      };
+
+      return {
+
+        "chart": chart,
+
+        "group": group,
+
+        "projection": projection,
+
+        "filterAccessor": filterAccessor,
+
+        "nameAccessor": nameAccessor,
+
+        "longitudeAccessor": longitudeAccessor,
+
+        "latitudeAccessor": latitudeAccessor,
+
+        "generate": generate
+      };
+
+  })();
+
+  // Load csv
+
+  d3.csv("./Sess, gebr en bestel per datum, regio, long en lat 20150101-20151231 (NL).csv", function(csv) {
+
+    csv.forEach( function(d, i) {
+
+      if (d["Regio"] == "North Brabant")
+        d["Regio"] = "Noord-Brabant";
+
+      if (d["Regio"] == "South Holland")
+        d["Regio"] = "Zuid-Holland";
+
+      if (d["Regio"] == "North Holland")
+        d["Regio"] = "Noord-Holland";
+    });
+
+    data = crossfilter(csv);
+
+    // Crossfilter dimensions
+
+    regios = data.dimension(function(d) {
+        return d.Regio;
+    });
+    
+    totals = data.dimension(function(d) {
+        return "total";
+    });
+
+    longLat = data.dimension(function(d) {
+
+        return [
+
+          {
+            "Lengtegraad": parseFloat(d["Lengtegraad"]),
+      
+            "Breedtegraad": parseFloat(d["Breedtegraad"]),
+      
+            "Plaats": d["Plaats"],
+      
+            "Regio": d["Regio"]
+          },
+
+          d["Plaats"]
+        
+        ];
+    });
+
+    // Crossfilter groups
+    
+    all = data.groupAll();
+
+    bestellingenPerRegio = regios.group().reduceSum(function (d) {
+        return d["Bestelling (Voltooiingen doel 4)"];
+    }); 
+
+    bestellingenPerLongLat = longLat.group().reduceSum(function (d) {
+        return d["Bestelling (Voltooiingen doel 4)"];
+    }); 
+
+    sessiesPerRegio = regios.group().reduceSum(function (d) {
+        return d["Sessies"];
+    });
+
+    conversieratioPerRegio = regios.group().reduce(
+
+          function (p, v) {
+      
+              p.sessions += +v["Sessies"];
+      
+              p.orders += +v["Bestelling (Voltooiingen doel 4)"]
+      
+              p.ratio = p.orders / p.sessions;
+      
+              return p;
+          },
+      
+          function (p, v) {
+      
+              p.sessions -= +v["Sessies"];
+      
+              p.orders -= +v["Bestelling (Voltooiingen doel 4)"]
+      
+              p.ratio = p.orders / p.sessions;
+      
+              return p;
+          },
+      
+          function () {
+              return {sessions: 0, orders: 0, ratio: 0};
+          }
+    );
+    
+    metricsTotal = totals.group().reduce(
+      
+          function (p, v) {
+      
+              p.sessions += +v["Sessies"];
+      
+              p.orders += +v["Bestelling (Voltooiingen doel 4)"]
+      
+              p.conversieratio = p.orders / p.sessions;
+      
+              return p;
+          },
+      
+          function (p, v) {
+      
+              p.sessions -= +v["Sessies"];
+      
+              p.orders -= +v["Bestelling (Voltooiingen doel 4)"]
+      
+              p.conversieratio = p.orders / p.sessions;
+      
+              return p;
+          },
+      
+          function () {
+              return {sessions: 0, orders: 0, conversieratio: 0};
+          }
+    );
+    
+    // load geojson
+
+    d3.json("./provinces.geojson", function (provincesJson) {
+
+      // Configure choroplethChart
+
+      choroplethChart.width(chart_width)
+        
+        .height(chart_height)
+        
+        .dimension(regios)
+        
+        .group(sessiesPerRegio)
+        
+        .colors(d3.scale.quantize().range(["#E2F2FF", "#C4E4FF", "#9ED2FF", "#81C5FF", "#6BBAFF", "#51AEFF", "#36A2FF", "#1E96FF", "#0089FF", "#0061B5"]))
+        
+        .colorDomain( d3.extent(sessiesPerRegio.all().map(function(d){return d.value;})) )
+        
+        .colorCalculator(function (d) { return d ? choroplethChart.colors()(d) : "#ccc"; })
+        
+        .overlayGeoJson(provincesJson.features, "state", function (d) {
+            return d.properties.OMSCHRIJVI;
+        })
+        
+        .projection(   d3_projection  )
+        
+        .controlsUseVisibility(true)
+
+        .legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))
+
+        .title(function (d) {
+            return "Regio: " + d.key + "\nTotaal aantal sessies: " + d.value;
+        });
+
+      // Override chart method
+
+      choroplethChart.turnOffControls = function () {
+
+          this.selectAll('.reset').style('visibility', 'hidden');
+
+          this.selectAll('.filter').text('Alle provincies');
+        
+        return this;
+      };
+
+      // Configure bubbleOverlays
+      
+      bubbleOverlayChart.width(chart_width)
+
+        .height(chart_height)
+      
+        .dimension(regios)
+      
+        .group(bestellingenPerRegio)
+      
+        .radiusValueAccessor(function(p) {
+            return p.value;
+        })
+      
+        .r(d3.scale.linear().domain([0, 1000]))
+      
+        .colors(["lightgray"])
+      
+        .colorDomain([13, 30])
+      
+        .colorAccessor(function(p) {
+            return p.value;
+        })
+      
+        .keyAccessor(function(p) {
+            return p.key;
+        })
+      
+        .title(function(d) {
+            return "Regio: " + d.key + "\nAantal bestellingen: "+ d.value;
+        })
+      
+        .point("Groningen", 829, 127)
+      
+        .point("Flevoland", 612, 369)
+      
+        .point("Drenthe", 799, 248)
+      
+        .point("Friesland", 655, 175)
+      
+        .point("Overijssel", 771, 392)
+      
+        .point("Gelderland", 673, 493)
+      
+        .point("Utrecht", 525, 495)
+      
+        .point("Zuid-Holland", 395, 531)
+      
+        .point("Noord-Brabant", 535, 656)
+      
+        .point("Zeeland", 265, 680)
+      
+        .point("Limburg", 655, 871)
+      
+        .point("Noord-Holland", 458, 331)
+      
+        .debug(false);
+      
+      bubbleOverlayChart2.width(chart_width)
+        
+        .height(chart_height)
+        
+        .dimension(longLat)
+        
+        .group(bestellingenPerLongLat)
+        
+        .radiusValueAccessor(function(p) {
+            return p.value;
+        })
+        
+        .r(d3.scale.linear().domain([0, 200]))
+        
+        .colors(["orange"])
+        
+        .colorDomain([13, 30])
+        
+        .colorAccessor(function(p) {
+            return p.value;
+        })
+        
+        .keyAccessor(function(p) {
+            return p.key[0]["Plaats"];
+        })
+        
+        .title(function(d) {
+            return "Plaats: " + d.key[0]["Plaats"] + "\nAantal bestellingen: "+ d.value;
+        })
+        
+        .label(function(){return null;})
+              
+        .MIN_RADIUS = 0.1;
+
+      // Configure number displays
+      
+      conversionNumberDisplay.group(metricsTotal)
+
+      .valueAccessor( function(d){ 
+          return d.value.conversieratio;
+        })
+      
+      .formatNumber(d3.format('.2%'));
+
+      
+      sessionsNumberDisplay.group(metricsTotal)
+
+      .valueAccessor( function(d){ 
+          return d.value.sessions;
+        })
+      
+      .formatNumber(d3.format('f'));
+      
+      
+      ordersNumberDisplay.group(metricsTotal)
+
+      .valueAccessor( function(d){ 
+          return d.value.orders;
+        })
+      
+      .formatNumber(d3.format('f'));
+
+
+      // Generate points for bubbleOverlayChart2
+      
+      __generatePointsFromGroup.chart(bubbleOverlayChart2).group(bestellingenPerLongLat)
+
+        .projection(d3_projection)
+      
+        .filterAccessor(
+          function(d){
+            return (d.value);
+          })
+      
+        .nameAccessor(
+          function(d){
+            return d.key[0]["Plaats"];
+          })
+      
+        .longitudeAccessor(
+          function(d){
+            return d.key[0]["Lengtegraad"];
+          })
+      
+        .latitudeAccessor(
+          function(d){
+            return d.key[0]["Breedtegraad"];
+          })
+      
+        .generate();
+
+
+      // Events
+
+      choroplethChart.on('preRender', function(chart, filter){
+
+        document.getElementsByClassName('container')[0].style.opacity = 1;
+        
+        document.getElementsByClassName('spinner')[0].style.display = 'none';
+
+      });
+      
+      choroplethChart.on('pretransition', function(_chart) {
+          
+          _chart.selectAll("g.state").on("click", function (d) {
+
+            if (_chart.filter() !== null) {
+              _chart.filter(null)
+                .filter(d.properties["OMSCHRIJVI"])
+            }
+
+            _chart.redrawGroup();
+
+          });
+
+        });
+
+      // Custom onClick callbacks
+
+      bubbleOverlayChart.onClick = function(d) {
+        
+        if (d.key !== choroplethChart.filter()){
+          choroplethChart.filter(null).filter( d.key );
+        } else {
+          choroplethChart.filter(null);
+        }
+
+        choroplethChart.redrawGroup();
+
+      };
+
+      bubbleOverlayChart2.onClick = function(d) {
+
+        if (d.key[0]["Regio"] !== choroplethChart.filter()){
+          choroplethChart.filter(null).filter( d.key[0]["Regio"]  );
+        } else {
+          choroplethChart.filter(null);
+        }
+
+        choroplethChart.redrawGroup();
+
+      };
+
+
+      // Render charts
+
+      choroplethChart.render();
+
+      bubbleOverlayChart.svg(d3.select("#choropleth-chart svg")).render();
+
+      bubbleOverlayChart2.svg(d3.select("#choropleth-chart svg")).render();
+      
+      conversionNumberDisplay.render();
+      
+      sessionsNumberDisplay.render();
+      
+      ordersNumberDisplay.render();
+
+    });
+
+  });
+
+})(window, document);
+
+    </script>
+
+  </body>
+
+</html>

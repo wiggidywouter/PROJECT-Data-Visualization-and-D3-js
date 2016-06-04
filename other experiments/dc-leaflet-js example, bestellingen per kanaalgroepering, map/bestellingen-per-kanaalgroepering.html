@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+
+<head>
+
+  <title>DC.js + Leaflet Experiment, bestellingen per kanaalgroepering</title>
+
+  <meta itemprop="name" content="DC.js + Leaflet + Experiment"/>
+
+  <meta itemprop="description" content="DC.js + Leaflet Experiment"/>
+
+  <meta charset="UTF-8">
+
+  <link type="text/css" href="../../node_modules/leaflet/dist/leaflet.css" rel="stylesheet"/>
+  
+  <link type="text/css" href="../../node_modules/leaflet.markercluster/dist/MarkerCluster.Default.css" rel="stylesheet"/>
+
+  <link type="text/css" href="../../node_modules/dc/dc.css" rel="stylesheet"/>
+
+  <!-- Styles -->
+  
+  <style>
+
+    #holder {
+      width:850px;
+      margin:20px auto;
+    }
+
+    #holder>div {
+      padding:30px 0;
+      clear:both;
+    }
+
+    .map {
+      width:600px;
+      height:400px;
+    }
+
+    .pie {
+      margin-left:30px;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<div id="holder">
+
+  <div id="demo1">
+
+    <h1>Bestellingen per kanaalgroepering</h1>
+
+    <h2>Markers with clustering, popups and single selection</h2>
+
+    <div class="map"></div>
+
+    <div class="pie"></div>
+
+  </div>
+
+</div> <!-- /holder -->
+
+<script type="text/javascript" src="../../node_modules/d3/d3.js"></script>
+
+<script type="text/javascript" src="../../node_modules/crossfilter/crossfilter.js"></script>
+
+<script type="text/javascript" src="../../node_modules/dc/dc.js"></script>
+
+<script type="text/javascript" src="../../node_modules/leaflet/dist/leaflet.js"></script>
+
+<script type="text/javascript" src="../../node_modules/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+<script type="text/javascript" src="../../node_modules/dc-addons/dist/leaflet-map/dc-leaflet.js"></script>
+
+<script type="text/javascript">
+
+  ; (function () {
+
+    var data, flatten, markerSelectChart, bestellingen, bestellingenGroep, kanaal, kanaalGroep;
+
+     /*     Markers      */
+
+    d3.csv("Bestellingen per locatie en kanaalgroepering (2015).csv", function(_data) {
+      
+      data = _data;
+
+      data.forEach(function(d) {
+
+        d.lon = d["Lengtegraad"];
+
+        d.lat = d["Breedtegraad"];
+
+        d.city = d["Plaats"];
+
+        d.channel = d["Default Channel Grouping (Standaard kanaalgroepering)"];
+
+        d.orders = +d["Bestelling (Voltooiingen doel 4)"];
+
+        d.uniq = Math.random().toString(36).slice(-10);
+
+        delete d["Lengtegraad"];
+
+        delete d["Breedtegraad"];
+
+        delete d["Plaats"];
+
+        delete d["Default Channel Grouping (Standaard kanaalgroepering)"];
+
+        delete d["Bestelling (Voltooiingen doel 4)"];
+
+        var i = d.orders - 1;
+
+        while (i > 0) {
+
+          data.push( JSON.parse(JSON.stringify(d)) );
+          
+          data[data.length-1]["uniq"] = Math.random().toString(36).slice(-9);
+          
+          i--;
+        }
+        
+        return d;
+
+      });
+
+      drawMarkerSelect(data);
+
+    }); // eof d3.csv()
+
+
+    function drawMarkerSelect(data) {
+
+      var xf = crossfilter(data),
+
+          groupname = "marker-select";
+
+      // Crossfilter dimensions
+      
+      bestellingen = xf.dimension(function(d) { return [d.uniq, d.lat, d.lon, d.city, d.orders ,d.channel]; });
+
+      kanaal = xf.dimension(function(d) { return d["channel"]; });
+
+      // Crossfilter groups
+
+      bestellingenGroep = bestellingen.group().reduceCount();
+      
+      kanaalGroep = kanaal.group().reduceCount();
+      
+      // Configure charts
+      
+      markerSelectChart = dc.leafletMarkerChart("#demo1 .map", groupname)
+
+          .dimension(bestellingen)
+
+          .group(bestellingenGroep)
+
+          .locationAccessor(function (d) {
+             return [parseFloat(d.key[1]),parseFloat(d.key[2])];
+          })
+
+          .title(function(d){
+            return d.key[3] + " (" + d.key[5] + ").";
+          })
+
+          .width(600)
+
+          .height(400)
+
+          .center([52.15,5.50])
+
+          .zoom(7)
+
+          .cluster(true);  
+
+      dc.pieChart("#demo1 .pie",groupname)
+
+          .dimension(kanaal)
+
+          .group(kanaalGroep)
+
+          .width(200)
+
+          .height(200)
+
+          .renderLabel(true)
+
+          .renderTitle(true)
+
+          .ordering(function (p) {
+            return -p.value;
+          });
+
+      // Init
+
+      dc.renderAll(groupname);
+
+      // Fun with circles...
+
+      var circle = L.circle([51.508, 6.55], 15000, { color: 'red', fillColor: '#f03', fillOpacity: 0.5 })
+
+        .bindPopup("I am a circle.")
+
+        .addTo(markerSelectChart.map());
+
+    } // eof drawMarkerSelect()
+
+  })();
+
+</script>
+</body>
+</html>

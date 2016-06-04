@@ -1,0 +1,191 @@
+
+/* Reset remove dotted line from focused links */
+
+a:focus {
+  outline: none;
+}
+
+/* Main styles */
+
+h4 {
+  font-weight: 800;
+  margin-top: 5px;
+}
+
+.container {
+  opacity: 0;
+  margin-top: 41px;
+  transition: margin-top, 0.4s, cubic-bezier(0.85, 0, 0.15, 1);
+}
+
+/* Components */
+
+.header-bar {
+  padding: 10px 20px;
+  text-align: center;
+  background-color: #DE3E82;
+  color: #fff;
+  font-style: italic;
+  position: fixed;
+  width: 100%;
+  z-index: 1;
+  margin-top: -83px;
+  transition: margin-top, 0.3s, cubic-bezier(0.85, 0, 0.15, 1);
+}
+
+.info-button {
+  font-size: 18px;
+  color: #fff;
+  margin-left: 25px;
+  line-height: 1;
+  top: 2px;
+  position: relative;
+}
+
+.info-button:hover,
+.info-button:visited {
+    color: #fff;
+}
+
+/* Charts */
+
+.apparaatcategorie-chart,
+.besturingssysteem-chart,
+.browser-chart,
+.funnel-chart {
+  width: 100%;
+}
+
+.funnel-chart {
+  margin-top: 6px;
+}
+
+.dc-data-count {
+  float: none;
+  margin-top: 20px;
+}
+
+/* Chart titles & resets */
+
+.apparaatcategorie-chart-title,
+.besturingssysteem-chart-title,
+.browser-chart-title {
+  display: inline;
+  top: -4px;
+  font: 10px sans-serif;
+  text-transform: uppercase;
+}
+
+.reset {
+  text-transform: uppercase;
+  font: 10px sans-serif;  
+}
+
+/* Emphasize active filter with contrasting color */
+
+.dc-chart .selected,
+.dc-chart .selected:hover {
+  stroke: orange;
+  stroke-width: 1px;
+  fill: orange;
+}
+
+/* Info tour */
+
+.shepherd-theme-arrows.shepherd-element {
+  max-width: 400px;
+}
+
+body.shepherd-active .shepherd-target.shepherd-enabled {
+  position: relative;
+  box-shadow: 0 0 0 99999px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  pointer-events:  auto;
+  transition: all 0.3s ease;
+}
+
+body.shepherd-active .shepherd-step {
+  z-index: 9999;
+}
+
+/* Spinner */
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  position: fixed;
+  top: calc(50% - 20px);
+  left: calc(50% - 20px);
+}
+
+.double-bounce1, .double-bounce2 {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #B1D4E7;
+  opacity: 0.6;
+  position: absolute;
+  top: 0;
+  left: 0;
+  
+  -webkit-animation: sk-bounce 2.0s infinite ease-in-out;
+  animation: sk-bounce 2.0s infinite ease-in-out;
+}
+
+.double-bounce2 {
+  -webkit-animation-delay: -1.0s;
+  animation-delay: -1.0s;
+}
+
+@-webkit-keyframes sk-bounce {
+  0%, 100% { -webkit-transform: scale(0.0) }
+  50% { -webkit-transform: scale(1.0) }
+}
+
+@keyframes sk-bounce {
+  0%, 100% { 
+    transform: scale(0.0);
+    -webkit-transform: scale(0.0);
+  } 50% { 
+    transform: scale(1.0);
+    -webkit-transform: scale(1.0);
+  }
+}
+
+/* Icons */
+
+@font-face {
+    font-family: 'icomoon';
+    src:    url('../fonts/icomoon.eot?5rfwv8');
+    src:    url('../fonts/icomoon.eot?5rfwv8#iefix') format('embedded-opentype'),
+        url('../fonts/icomoon.ttf?5rfwv8') format('truetype'),
+        url('../fonts/icomoon.woff?5rfwv8') format('woff'),
+        url('../fonts/icomoon.svg?5rfwv8#icomoon') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+    /* use !important to prevent issues with browser extensions that change fonts */
+    font-family: 'icomoon' !important;
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+
+    /* Better Font Rendering =========== */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-info-circle:before {
+    content: "\f05a";
+}
+.icon-arrow-down:before {
+    content: "\f063";
+}
+.icon-check:before {
+    content: "\e900";
+}

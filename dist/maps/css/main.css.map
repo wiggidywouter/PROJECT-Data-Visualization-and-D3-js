@@ -1,0 +1,1 @@
+{"version":3,"sources":["style1.css","style2.css"],"names":[],"mappings":"AAAA;AACA;AACA;ACFA;AACA;AACA","file":"css/main.css","sourcesContent":["body {\r\n  background: #97B53A;\r\n}","body {\r\n  color: orange;\r\n}"],"sourceRoot":"/source/"}

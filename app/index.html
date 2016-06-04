@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<html lang='nl'>
+
+  <head>
+
+    <meta charset='utf-8'>
+
+    <title>Project: Data Visualization and D3.js</title>
+
+    <meta name=viewport content="width=device-width, initial-scale=1">
+    
+    <!-- build:css css/combined.css -->
+    <link href='../node_modules/tether-shepherd/dist/css/shepherd-theme-arrows.css' rel='stylesheet' type='text/css'>
+
+    <link href='../node_modules/bootstrap/dist/css/bootstrap.css' rel='stylesheet' type='text/css'>
+
+    <link href='../node_modules/dc/dc.css' rel='stylesheet' type='text/css'>
+
+
+    <link href='./css/dc-custom-funnel-chart.css' rel='stylesheet' type='text/css'>
+
+    <link href='./css/main.css' rel='stylesheet' type='text/css'>
+    <!-- endbuild -->
+
+  </head>
+
+  <body>
+    
+    <div class="header-bar">
+        
+        <strong>
+        
+          <span class="visible-xs-inline">D3.js, Interactive visualization</span>
+        
+          <span class="hidden-xs">Project: datavisualization and D3.js - Interactive visualization</span>
+        
+        </strong>
+        
+        <button type="button" class="close">&times;</button>
+        
+        <a href="#" class="info-button"> <i class="icon-info-circle"></i> </a>
+
+    </div>
+    <!-- container -->
+    <div class="container">
+
+      <div class="dc-data-count">
+
+        <h4>Funnelconversie</h4>
+      
+      </div>
+
+      <div class="row">
+
+        <!-- /1st column -->
+        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4">
+          
+          <div id="funnel-conversion-per-apparaat-categorie" class="apparaatcategorie-chart">
+            
+            <h4 class="apparaatcategorie-chart-title">Apparaatcategorie<span class='reset' style='visibility: hidden;'>:</span></h4>
+        
+            <span class='reset' style='visibility: hidden;'> <span class='filter'></span> </span>
+
+            <a class='reset' href='javascript:funnelConversieratioPerApparaatCategorieChart.filterAll();dc.redrawAll();' style='visibility: hidden;'>reset</a>
+            
+          </div>
+
+        </div>
+        <!-- /1st column -->
+
+        <!-- 2nd column -->
+        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4">
+
+          <div id="funnel-conversion-per-besturingssysteem" class="besturingssysteem-chart">
+
+              <h4 class="besturingssysteem-chart-title">Besturingssysteem<span class='reset' style='visibility: hidden;'>:</span></h4>
+
+              <span class='reset' style='visibility: hidden;'> <span class='filter'></span> </span>
+
+              <a class='reset' href='javascript:funnelConversieratioPerBesturingssysteemChart.filterAll();dc.redrawAll();' style='visibility: hidden;'>reset</a>
+
+          </div>
+
+        </div>
+        <!-- /2nd column -->
+
+        <!-- 3rd column -->
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-4">
+
+          <div id="funnel-conversion-per-browser" class="browser-chart">
+
+            <h4 class="browser-chart-title">Browser<span class='reset' style='visibility: hidden;'>:</span></h4>
+            
+            <span class='reset' style='visibility: hidden;'> <span class='filter'></span> </span>
+
+            <a class='reset' href='javascript:funnelConversieratioPerBrowserChart.filterAll();dc.redrawAll();' style='visibility: hidden;'>reset</a>
+
+          </div>
+
+        </div>
+        <!-- /3rd column -->
+
+      </div>
+
+      <h4>Funnel stappen</h4>
+      
+      <div class="row">
+      
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          
+          <div id="custom-funnel-chart" class="funnel-chart"></div>
+        
+        </div>
+      
+      </div>
+    
+    </div>
+    <!-- /container -->
+
+    <div class="spinner">
+
+      <div class="double-bounce1"></div>
+      
+      <div class="double-bounce2"></div>
+    
+    </div>
+
+    <!-- build:js js/combined.js -->
+    <script src="../node_modules/d3/d3.js"></script>
+
+    <script src="../node_modules/crossfilter/crossfilter.js"></script>
+
+    <script src="../node_modules/dc/dc.js"></script>
+
+    <script src="./js/dc-custom-funnel-chart.js"></script>
+    
+    <script src='../node_modules/jquery/dist/jquery.js' type='text/javascript'></script>
+
+    <script src="../node_modules/tether-shepherd/dist/js/tether.js"></script>
+
+    <script src="../node_modules/tether-shepherd/dist/js/shepherd.js"></script>
+    
+    <script src="./js/main.js"></script>
+    
+    <script src="./js/story.js"></script>
+    <!-- endbuild -->
+
+  </body>
+
+</html>
